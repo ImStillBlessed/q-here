@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mongodb"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  created_at    DateTime  @default(now())
+  emailVerified DateTime? @map("verified_at")
+  image         String?
+  Sessions      Session[]
+  Accounts      Account[]
+  queues        Queue[]
+  members       Member[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+  @@index([userId], name: "userId")
+  @@map("accounts")
+}
+
+model Session {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  session_token String   @unique
+  userId        String   @db.ObjectId
+  expires       DateTime @map("expires_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "userId")
+  @@map("sessions")
+}
+
+model Queue {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  name        String
+  join_id     String
+  status      String
+  maxCapacity Int?
+  maxDuration Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     Member[]
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "userId")
+  @@map("queues")
+}
+
+model Member {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  queueId   String   @db.ObjectId
+  userId    String   @db.ObjectId
+  image     String?
+  active    Boolean
+  position  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  queue     Queue    @relation(fields: [queueId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([queueId], name: "queueId")
+  @@index([userId], name: "userId")
+  @@map("members")
+}
