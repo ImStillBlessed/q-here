@@ -44,7 +44,7 @@ cd server
 npm install
 ```
 
-[termina 2]
+[terminal 2]
 
 ```bash
 cd client
@@ -56,24 +56,12 @@ Run the servers using
 
 ```bash
 npm run server
-# or
-yarn server
-# or
-pnpm server
-# or
-bun server
 ```
 
 [terminal 2]
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
