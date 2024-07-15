@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { prisma } from '@/lib/db';
 import { getAuthSession } from '@/lib/nextauth';
+import { socket } from '@/utils/socket';
 import { redirect } from 'next/navigation';
 import React from 'react';
 
@@ -63,7 +64,7 @@ const QueueRoom = async ({ params: { queue_id } }: Props) => {
         </Card>
       </div>
       <div className="grid mt-4">
-        <MemberTable />
+        <MemberTable allMembers={queue.members} />
       </div>
     </main>
   );

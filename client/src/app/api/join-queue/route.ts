@@ -37,7 +37,9 @@ export async function POST(req: Request, res: Response) {
         },
       });
       console.log('adding:', member, '\nMembers:', queue.members);
+
       socket.emit('update_room', member);
+
       return NextResponse.json({ member: member }, { status: 201 });
     } else {
       return NextResponse.json(

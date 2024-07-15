@@ -13,23 +13,51 @@ import {
 import UserAvatar from '../UserAvatar';
 import { socket } from '@/utils/socket';
 
-type Props = {};
+type Props = {
+  allMembers: Member[];
+};
 
-const MemberTable = (props: Props) => {
-  // collect the new member and append it to the list of exixting members.
-
-  const [members, setMembers] = React.useState<Member[]>([]);
+const MemberTable = ({ allMembers }: Props) => {
+  const [members, setMembers] = React.useState<Member[]>(allMembers);
 
   React.useEffect(() => {
     const handleRoomUpdate = (data: Member) => {
       console.log('Received data:', data);
-      setMembers((prevMembers) => [...prevMembers, data]);
+
+      // Check if the member already exists
+      setMembers((prevMembers) => {
+        const memberExists = prevMembers.some(
+          (member) => member.id === data.id
+        );
+        if (!memberExists) {
+          return [...prevMembers, data];
+        }
+        return prevMembers.map((member) =>
+          member.id === data.id ? data : member
+        );
+      });
     };
 
     socket.on('room_update', handleRoomUpdate);
 
     return () => {
       socket.off('room_update', handleRoomUpdate);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const handleMemberLeave = (data: { id: string }) => {
+      console.log('Member left:', data);
+
+      setMembers((prevMembers) =>
+        prevMembers.filter((member) => member.id !== data.id)
+      );
+    };
+
+    socket.on('member_leave', handleMemberLeave);
+
+    return () => {
+      socket.off('member_leave', handleMemberLeave);
     };
   }, []);
 
@@ -42,35 +70,35 @@ const MemberTable = (props: Props) => {
       );
   }, [members]);
 
-  if (activeMembers.length > 0) {
-    return (
-      <Table className="mt-4">
-        <TableCaption>End of List.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[10px]">No.</TableHead>
-            <TableHead></TableHead>
-            <TableHead>User ID</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <>
+  return (
+    <div>
+      {activeMembers.length > 0 ? (
+        <Table className="mt-4">
+          <TableCaption>End of List.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[10px]">No.</TableHead>
+              <TableHead></TableHead>
+              <TableHead>User ID</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {activeMembers.map((member, index) => (
               <TableRow key={member.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>
-                  <UserAvatar user={member} />{' '}
+                  <UserAvatar user={member} />
                 </TableCell>
-                <TableCell>{member.id}</TableCell>{' '}
+                <TableCell>{member.id}</TableCell>
               </TableRow>
             ))}
-          </>
-        </TableBody>
-      </Table>
-    );
-  } else {
-    return <p>No membres yet</p>;
-  }
+          </TableBody>
+        </Table>
+      ) : (
+        <p>No members yet</p>
+      )}
+    </div>
+  );
 };
 
 export default MemberTable;

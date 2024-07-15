@@ -1,4 +1,5 @@
 'use client';
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useForm } from 'react-hook-form';
@@ -21,35 +22,38 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 
 type Props = {};
+
+// Define input type based on the Zod schema
 type Input = z.infer<typeof JoinSchema>;
 
 const JoinQueue = (props: Props) => {
   const router = useRouter();
+
+  // Setup the mutation for joining the queue
   const { mutate: addMember } = useMutation({
-    mutationFn: async (join_id: Input) => {
-      const response = await axios.post('/api/join-queue', { join_id });
+    mutationFn: async (input: Input) => {
+      const response = await axios.post('/api/join-queue', input);
       return response.data;
     },
   });
 
+  // Setup the form using react-hook-form with Zod resolver
   const form = useForm<Input>({
     resolver: zodResolver(JoinSchema),
   });
+
+  // Handle form submission
   function onSubmit(input: Input) {
-    addMember(
-      {
-        join_id: input.join_id,
+    addMember(input, {
+      onSuccess: ({ member }) => {
+        router.push(`/room/${member.queueId}`);
       },
-      {
-        onSuccess: ({ member }) => {
-          router.push(`/room/${member.queueId}`);
-        },
-        onError: () => {
-          console.log('error');
-        },
-      }
-    );
+      onError: (error) => {
+        console.error('Error joining queue:', error);
+      },
+    });
   }
+
   return (
     <div>
       <Card>
@@ -69,7 +73,7 @@ const JoinQueue = (props: Props) => {
                       <Input placeholder="######" {...field} />
                     </FormControl>
                     <FormDescription>
-                      type in the unique join id
+                      Type in the unique join ID.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
